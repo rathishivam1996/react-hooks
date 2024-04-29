@@ -16,6 +16,7 @@ import {
   calculateDeltas,
   calculateNewSize,
   getCurrentPosition,
+  getMaxBounds,
   getSize,
   isRecognisableEvent,
 } from "./use-resize.utils";
@@ -37,6 +38,8 @@ export type UseResizeProps<Target extends Element = Element> = {
   onResizeEnd?: ResizeEndCallback<Target>;
   minSize?: Size;
   maxSize?: Size;
+  parentRef?: ResizableRef<Target>;
+  lockAspectRatio?: boolean;
 };
 
 function useResize<Target extends Element = Element>({
@@ -54,6 +57,8 @@ function useResize<Target extends Element = Element>({
     w: Infinity,
     h: Infinity,
   },
+  parentRef,
+  lockAspectRatio = false,
 }: UseResizeProps<Target>): ResizableResult<Target> {
   const initialState: ResizableState<Target> = {
     resizableRef: useRef(null),
@@ -166,14 +171,17 @@ function useResize<Target extends Element = Element>({
 
       const { deltaX, deltaY } = calculateDeltas(startPos, newPosition);
 
+      const maxBounds = getMaxBounds(maxSize, parentRef);
       const newSize = calculateNewSize(
         startSize,
         startDirection,
         deltaX,
         deltaY,
         minSize,
-        maxSize,
+        maxBounds,
+        lockAspectRatio,
       );
+
 
       onResize?.({
         event,
@@ -186,7 +194,7 @@ function useResize<Target extends Element = Element>({
         currSize: newSize,
       });
     },
-    [onResize, state, disabled, maxSize, minSize],
+    [onResize, state, disabled, maxSize, minSize, parentRef, lockAspectRatio],
   );
 
   const handlePointerUp = useCallback(
@@ -212,13 +220,15 @@ function useResize<Target extends Element = Element>({
 
       const { deltaX, deltaY } = calculateDeltas(startPos, newPosition);
 
+      const maxBounds = getMaxBounds(maxSize, parentRef);
       const newSize = calculateNewSize(
         startSize,
         startDirection,
         deltaX,
         deltaY,
         minSize,
-        maxSize,
+        maxBounds,
+        lockAspectRatio,
       );
 
       setState((prevState) => {
@@ -236,7 +246,15 @@ function useResize<Target extends Element = Element>({
         currSize: newSize,
       });
     },
-    [onResizeEnd, state, disabled, maxSize, minSize],
+    [
+      onResizeEnd,
+      state,
+      disabled,
+      maxSize,
+      minSize,
+      parentRef,
+      lockAspectRatio,
+    ],
   );
 
   // effect for down listeners

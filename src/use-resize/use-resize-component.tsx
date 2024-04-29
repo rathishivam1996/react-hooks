@@ -1,13 +1,22 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import useResize from "./use-resize";
 
-import { useState } from "react";
-import { ResizeCallback } from "./use-resize.types";
+import { MutableRefObject, useState } from "react";
+import {
+  ResizeCallback,
+  ResizeEndCallback,
+  ResizeStartCallback,
+} from "./use-resize.types";
 
-const ResizeTest = () => {
+const ResizeTest = ({
+  parentRef,
+}: {
+  parentRef: MutableRefObject<HTMLDivElement | null>;
+}) => {
   const [width, setWidth] = useState(200);
   const [height, setHeight] = useState(200);
 
-  const onResizeStart = ({
+  const onResizeStart: ResizeStartCallback<HTMLDivElement> = ({
     event,
     resizable,
     handle,
@@ -22,7 +31,7 @@ const ResizeTest = () => {
   `);
   };
 
-  const onResize = ({
+  const onResize: ResizeCallback<HTMLDivElement> = ({
     event,
     resizable,
     handle,
@@ -31,7 +40,7 @@ const ResizeTest = () => {
     startSize,
     delta,
     currSize,
-  }: ResizeCallback<HTMLDivElement>) => {
+  }) => {
     console.log(`Resizing:
     Direction: ${direction}
     Delta: ${JSON.stringify(delta)}
@@ -41,7 +50,7 @@ const ResizeTest = () => {
     setHeight(currSize.h);
   };
 
-  const onResizeEnd = ({
+  const onResizeEnd: ResizeEndCallback<HTMLDivElement> = ({
     event,
     resizable,
     handle,
@@ -52,10 +61,16 @@ const ResizeTest = () => {
     currSize,
   }) => {
     console.log(`Resize ended:
+    event: ${event.target}
+    startPos: ${JSON.stringify(startPos)}
+    startSize: ${JSON.stringify(startSize)}
     Direction: ${direction}
     Delta: ${JSON.stringify(delta)}
     Final Size: ${JSON.stringify(currSize)}
   `);
+    console.dir(resizable);
+    console.dir(handle);
+
     setWidth(currSize.w);
     setHeight(currSize.h);
   };
@@ -63,11 +78,14 @@ const ResizeTest = () => {
   const [addTopRef, setAddTopRef] = useState(false);
   const { resizableRef, top, topright, right, bottom, left } =
     useResize<HTMLDivElement>({
+      disabled: addTopRef,
       onResizeStart,
       onResize,
       onResizeEnd,
-      minSize: { w: 10, h: 10 },
+      minSize: { w: 100, h: 100 },
       maxSize: { w: 500, h: 500 },
+      parentRef: parentRef,
+      lockAspectRatio: true,
     });
 
   return (

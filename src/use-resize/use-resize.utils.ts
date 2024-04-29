@@ -3,6 +3,7 @@ import {
   Direction,
   Position,
   ResizableDomEvents,
+  ResizableRef,
   Size,
 } from "./use-resize.types";
 
@@ -16,6 +17,38 @@ export function getSize<Target extends Element>(
     "current" in elementInput ? elementInput.current : elementInput;
 
   return element?.getBoundingClientRect();
+}
+
+export function getMaxBounds<Target extends Element>(
+  maxSize?: Size,
+  parentRef?: ResizableRef<Target>,
+): Size {
+  // If neither maxSize nor parentRef is provided, return Infinity for both width and height
+  if (!maxSize && !parentRef) return { w: Infinity, h: Infinity };
+
+  // If parentRef is provided, get its size
+  let parentSize: Size | undefined;
+  if (parentRef) {
+    const rect = getSize(parentRef);
+    if (rect) parentSize = { w: rect.width, h: rect.height };
+  }
+
+  // If only maxSize is provided, return it
+  if (maxSize && !parentSize) return maxSize;
+
+  // If only parentSize is provided, return it
+  if (!maxSize && parentSize) return parentSize;
+
+  // If both maxSize and parentSize are provided, return the minimum of the two
+  if (maxSize && parentSize) {
+    return {
+      w: Math.min(maxSize.w, parentSize.w),
+      h: Math.min(maxSize.h, parentSize.h),
+    };
+  }
+
+  // If none of the above conditions are met, return Infinity for both width and height
+  return { w: Infinity, h: Infinity };
 }
 
 export function isTouchEvent(event: Event): event is TouchEvent {
@@ -68,81 +101,147 @@ export function calculateNewSize(
   deltaY: number,
   minSize?: Size,
   maxSize?: Size,
+  lockAspectRatio = false,
 ): Size {
-  const newSize: Size = { ...currentSize };
+  let newSize: Size = { ...currentSize };
   const resizeDirection = getResizeDirection(handleDirection);
+
+  if (lockAspectRatio) {
+    const adjustedDelta = adjustForAspectRatio(
+      resizeDirection,
+      currentSize,
+      deltaX,
+      deltaY,
+    );
+
+    deltaX = adjustedDelta.deltaX;
+    deltaY = adjustedDelta.deltaY;
+
+    // Determine the handle direction for width
+    newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
+
+    // Determine the handle direction for height
+    newSize = updateHeight(newSize, "bottom", deltaY, minSize, maxSize);
+
+    return newSize;
+  }
 
   switch (resizeDirection) {
     case "horizontal":
-      if (handleDirection === "right") {
-        newSize.w = Math.min(
-          maxSize?.w ?? Infinity,
-          Math.max(minSize?.w ?? 0, currentSize.w + deltaX),
-        );
-      } else if (handleDirection === "left") {
-        newSize.w = Math.min(
-          maxSize?.w ?? Infinity,
-          Math.max(minSize?.w ?? 0, currentSize.w - deltaX),
-        );
-      }
+      newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
       break;
     case "vertical":
-      if (handleDirection === "bottom") {
-        newSize.h = Math.min(
-          maxSize?.h ?? Infinity,
-          Math.max(minSize?.h ?? 0, currentSize.h + deltaY),
-        );
-      } else if (handleDirection === "top") {
-        newSize.h = Math.min(
-          maxSize?.h ?? Infinity,
-          Math.max(minSize?.h ?? 0, currentSize.h - deltaY),
-        );
-      }
+      newSize = updateHeight(
+        newSize,
+        handleDirection,
+        deltaY,
+        minSize,
+        maxSize,
+      );
       break;
     case "diagonal":
-      if (handleDirection === "topright") {
-        newSize.w = Math.min(
-          maxSize?.w ?? Infinity,
-          Math.max(minSize?.w ?? 0, currentSize.w + deltaX),
-        );
-        newSize.h = Math.min(
-          maxSize?.h ?? Infinity,
-          Math.max(minSize?.h ?? 0, currentSize.h - deltaY),
-        );
-      } else if (handleDirection === "bottomright") {
-        newSize.w = Math.min(
-          maxSize?.w ?? Infinity,
-          Math.max(minSize?.w ?? 0, currentSize.w + deltaX),
-        );
-        newSize.h = Math.min(
-          maxSize?.h ?? Infinity,
-          Math.max(minSize?.h ?? 0, currentSize.h + deltaY),
-        );
-      } else if (handleDirection === "bottomleft") {
-        newSize.w = Math.min(
-          maxSize?.w ?? Infinity,
-          Math.max(minSize?.w ?? 0, currentSize.w - deltaX),
-        );
-        newSize.h = Math.min(
-          maxSize?.h ?? Infinity,
-          Math.max(minSize?.h ?? 0, currentSize.h + deltaY),
-        );
-      } else if (handleDirection === "topleft") {
-        newSize.w = Math.min(
-          maxSize?.w ?? Infinity,
-          Math.max(minSize?.w ?? 0, currentSize.w - deltaX),
-        );
-        newSize.h = Math.min(
-          maxSize?.h ?? Infinity,
-          Math.max(minSize?.h ?? 0, currentSize.h - deltaY),
-        );
-      }
+      newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
+      newSize = updateHeight(
+        newSize,
+        handleDirection,
+        deltaY,
+        minSize,
+        maxSize,
+      );
       break;
     default:
       break;
   }
 
   return newSize;
+}
+
+function adjustForAspectRatio(
+  resizeDirection: ResizeDirection,
+  currentSize: Size,
+  deltaX: number,
+  deltaY: number,
+): Delta {
+  const aspectRatio = currentSize.w / currentSize.h;
+
+  switch (resizeDirection) {
+    case "horizontal":
+      deltaY = deltaX / aspectRatio;
+      break;
+    case "vertical":
+      deltaX = deltaY * aspectRatio;
+      break;
+    case "diagonal":
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        deltaY = deltaX / aspectRatio;
+      } else {
+        deltaX = deltaY * aspectRatio;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return { deltaX, deltaY };
+}
+
+function updateWidth(
+  size: Size,
+  handleDirection: Direction,
+  deltaX: number,
+  minSize?: Size,
+  maxSize?: Size,
+): Size {
+  let newWidth = size.w;
+  if (handleDirection === "right") {
+    newWidth = Math.min(
+      maxSize?.w ?? Infinity,
+      Math.max(minSize?.w ?? 0, size.w + deltaX),
+    );
+  } else if (handleDirection === "left") {
+    newWidth = Math.min(
+      maxSize?.w ?? Infinity,
+      Math.max(minSize?.w ?? 0, size.w - deltaX),
+    );
+  }
+  return { ...size, w: newWidth };
+}
+
+function updateHeight(
+  size: Size,
+  handleDirection: Direction,
+  deltaY: number,
+  minSize?: Size,
+  maxSize?: Size,
+): Size {
+  console.log(
+    size,
+    "size",
+    deltaY,
+    "deltaY",
+    minSize,
+    "minSize",
+    maxSize,
+    "maxSize",
+  );
+
+  let newHeight = size.h;
+  if (handleDirection === "bottom") {
+    newHeight = Math.min(
+      maxSize?.h ?? Infinity,
+      Math.max(minSize?.h ?? 0, size.h + deltaY),
+    );
+  } else if (handleDirection === "top") {
+    newHeight = Math.min(
+      maxSize?.h ?? Infinity,
+      Math.max(minSize?.h ?? 0, size.h - deltaY),
+    );
+  }
+
+  console.log(newHeight, "newHeight");
+
+  console.log({ ...size, h: newHeight });
+  return { ...size, h: newHeight };
 }
 
 type ResizeDirection = "horizontal" | "vertical" | "diagonal";
@@ -156,160 +255,3 @@ function getResizeDirection(handleDirection: Direction): ResizeDirection {
     return "diagonal";
   }
 }
-
-// export const calculateDirectionAndDelta = (event, initialPos) => {
-//   if (!initialPos) return null;
-
-//   const deltaX = event.clientX - initialPos.x;
-//   const deltaY = event.clientY - initialPos.y;
-
-//   // Calculate resize direction
-//   let direction;
-
-//   if (Math.abs(deltaX) >= Math.abs(deltaY)) {
-//     // Horizontal resize
-//     if (deltaX > 0) {
-//       direction = "east";
-//     } else {
-//       direction = "west";
-//     }
-//   } else {
-//     // Vertical resize
-//     if (deltaY > 0) {
-//       direction = "south";
-//     } else {
-//       direction = "north";
-//     }
-//   }
-
-//   // Handle edge cases for diagonal directions (optional)
-//   if (Math.abs(deltaX) > 0 && Math.abs(deltaY) > 0) {
-//     if (deltaX > 0 && deltaY > 0) {
-//       direction = "southeast";
-//     } else if (deltaX < 0 && deltaY > 0) {
-//       direction = "southwest";
-//     } else if (deltaX > 0 && deltaY < 0) {
-//       direction = "northeast";
-//     } else {
-//       direction = "northwest";
-//     }
-//   }
-
-//   return { direction, deltaX, deltaY };
-// };
-
-// // resizeUtils.js
-
-// export const calculateResizeDirectionAndDelta = (initialDirection, deltaX, deltaY) => {
-//   let direction;
-//   let deltaWidth = 0;
-//   let deltaHeight = 0;
-
-//   switch (initialDirection) {
-//     case "north":
-//       direction = "north";
-//       deltaHeight = -deltaY;
-//       break;
-//     case "northeast":
-//       direction = deltaX > 0 ? "east" : "north";
-//       deltaWidth = deltaX;
-//       deltaHeight = deltaX > 0 ? -deltaY : -deltaX;
-//       break;
-//     case "east":
-//       direction = "east";
-//       deltaWidth = deltaX;
-//       break;
-//     case "southeast":
-//       direction = deltaX > 0 ? "east" : "south";
-//       deltaWidth = deltaX;
-//       deltaHeight = deltaX > 0 ? deltaY : -deltaX;
-//       break;
-//     case "south":
-//       direction = "south";
-//       deltaHeight = deltaY;
-//       break;
-//     case "southwest":
-//       direction = deltaX < 0 ? "west" : "south";
-//       deltaWidth = -deltaX;
-//       deltaHeight = deltaX < 0 ? deltaY : deltaX;
-//       break;
-//     case "west":
-//       direction = "west";
-//       deltaWidth = -deltaX;
-//       break;
-//     case "northwest":
-//       direction = deltaX < 0 ? "west" : "north";
-//       deltaWidth = -deltaX;
-//       deltaHeight = deltaX < 0 ? -deltaY : -deltaX;
-//       break;
-//     default:
-//       break;
-//   }
-
-//   return { direction, deltaWidth, deltaHeight };
-// };
-
-// export const calculateResizeDirectionAndDelta = (initialDirection, deltaX, deltaY) => {
-//   let direction;
-//   let newDeltaX = deltaX;
-//   let newDeltaY = deltaY;
-
-//   switch (initialDirection) {
-//     case "north":
-//       direction = deltaY < 0 ? "north" : "south";
-//       newDeltaY = Math.abs(deltaY);
-//       break;
-//     case "northeast":
-//       if (deltaX < 0) {
-//         direction = "northwest";
-//         newDeltaX = Math.abs(deltaX);
-//       } else {
-//         direction = "southeast";
-//       }
-//       newDeltaY = Math.abs(deltaY);
-//       break;
-//     case "east":
-//       direction = deltaX < 0 ? "west" : "east";
-//       newDeltaX = Math.abs(deltaX);
-//       break;
-//     case "southeast":
-//       if (deltaX < 0) {
-//         direction = "southwest";
-//         newDeltaX = Math.abs(deltaX);
-//       } else {
-//         direction = "northeast";
-//       }
-//       newDeltaY = Math.abs(deltaY);
-//       break;
-//     case "south":
-//       direction = deltaY < 0 ? "north" : "south";
-//       newDeltaY = Math.abs(deltaY);
-//       break;
-//     case "southwest":
-//       if (deltaX < 0) {
-//         direction = "southeast";
-//         newDeltaX = Math.abs(deltaX);
-//       } else {
-//         direction = "northwest";
-//       }
-//       newDeltaY = Math.abs(deltaY);
-//       break;
-//     case "west":
-//       direction = deltaX < 0 ? "east" : "west";
-//       newDeltaX = Math.abs(deltaX);
-//       break;
-//     case "northwest":
-//       if (deltaX < 0) {
-//         direction = "northeast";
-//         newDeltaX = Math.abs(deltaX);
-//       } else {
-//         direction = "southwest";
-//       }
-//       newDeltaY = Math.abs(deltaY);
-//       break;
-//     default:
-//       direction = "unknown";
-//   }
-
-//   return { direction, deltaX: newDeltaX, deltaY: newDeltaY };
-// };
