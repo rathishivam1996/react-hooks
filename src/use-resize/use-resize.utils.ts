@@ -162,27 +162,31 @@ function adjustForAspectRatio(
   deltaX: number,
   deltaY: number,
 ): Delta {
+  let newDeltaX = deltaX;
+  let newDeltaY = deltaY;
+
   const aspectRatio = currentSize.w / currentSize.h;
 
   switch (resizeDirection) {
     case "horizontal":
-      deltaY = deltaX / aspectRatio;
+      newDeltaY = deltaX / aspectRatio;
       break;
     case "vertical":
-      deltaX = deltaY * aspectRatio;
+      newDeltaX = deltaY * aspectRatio;
       break;
     case "diagonal":
       if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        deltaY = deltaX / aspectRatio;
+        newDeltaY = deltaX / aspectRatio;
       } else {
-        deltaX = deltaY * aspectRatio;
+        newDeltaX = deltaY * aspectRatio;
       }
       break;
     default:
+      // If resize direction is not recognized, return unchanged deltas
       break;
   }
 
-  return { deltaX, deltaY };
+  return { deltaX: newDeltaX, deltaY: newDeltaY };
 }
 
 function updateWidth(
