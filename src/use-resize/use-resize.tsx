@@ -182,7 +182,6 @@ function useResize<Target extends Element = Element>({
         lockAspectRatio,
       );
 
-
       onResize?.({
         event,
         resizable,

@@ -1,6 +1,7 @@
 import { MutableRefObject, useRef } from "react";
 import "./App.css";
 import ResizeTest from "./use-resize/use-resize-component";
+import Counter from "./use-resize/counter";
 
 function App() {
   const parentRef: MutableRefObject<HTMLDivElement | null> =
@@ -14,6 +15,8 @@ function App() {
           className="m-[20px] flex h-[400px] w-[400px] items-center justify-center bg-slate-800"
         >
           <ResizeTest parentRef={parentRef} />
+
+          <Counter />
         </div>
       </main>
     </div>
