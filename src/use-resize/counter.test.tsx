@@ -1,19 +1,35 @@
 // Counter.test.tsx
 import "@testing-library/jest-dom"; // Import custom matchers
-import { fireEvent, render, screen } from "@testing-library/react";
-import Counter from "./counter";
+import { act, renderHook } from "@testing-library/react";
+import { useCounter } from "./use-counter";
 
-test("counter increments and decrements correctly", () => {
-  render(<Counter />);
+test("'initializes counter with default value'", () => {
+  const { result } = renderHook(() => useCounter());
 
-  // Initial count should be 0
-  expect(screen.getByTestId("count")).toHaveTextContent("0");
+  expect(result.current.count).toBe(0);
+});
 
-  // Click the increment button and verify count increases
-  fireEvent.click(screen.getByText("Increment"));
-  expect(screen.getByTestId("count")).toHaveTextContent("1");
+test("increments counter", () => {
+  const { result } = renderHook(() => useCounter());
 
-  // Click the decrement button and verify count decreases
-  fireEvent.click(screen.getByText("Decrement"));
-  expect(screen.getByTestId("count")).toHaveTextContent("0");
+  act(() => {
+    result.current.increment();
+  });
+
+  expect(result.current.count).toBe(1);
+});
+
+test("decrements counter", () => {
+  const { result } = renderHook(() => useCounter());
+
+  act(() => {
+    result.current.decrement();
+  });
+
+  expect(result.current.count).toBe(-1);
+});
+
+test("initializes counter with custom initial value", () => {
+  const { result } = renderHook(() => useCounter(5));
+  expect(result.current.count).toBe(5);
 });
