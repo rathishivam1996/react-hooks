@@ -1,31 +1,67 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import fetchMock from "jest-fetch-mock";
 import useDataFetcher from "./use-data-fetcher";
 
 describe("useDataFetcher", () => {
-  it("should init with loading", async () => {
-    const { result } = renderHook(() =>
-      useDataFetcher("www://api.example.com"),
-    );
-
-    expect(result.current.data).toBe(null);
-    expect(result.current.error).toBe(null);
-    expect(result.current.loading).toBe(true);
+  beforeEach(() => {
+    fetchMock.resetMocks();
   });
 
-  it("should fetch data and update state", async () => {
-    const mockData = { id: 1, name: "jhon" };
-    global.fetch = jest
-      .fn()
-      .mockReturnValue({ json: () => Promise.resolve(mockData) });
+  it("should start with initial states", () => {
+    const { result } = renderHook(() => useDataFetcher("/api/data"));
 
-    const { result } = renderHook(() =>
-      useDataFetcher("www://api.example.com"),
-    );
+    expect(result.current.loading).toBe(true);
+    expect(result.current.data).toBeNull();
+    expect(result.current.error).toBeNull();
+  });
 
-    waitFor(() => {
-      expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBe(null);
-      expect(result.current.data).toEqual(mockData);
+  it("should handle loading state and data state", async () => {
+    const mockData = { data: "12345" };
+    fetchMock.mockResponseOnce(JSON.stringify(mockData));
+
+    const { result } = renderHook(() => useDataFetcher("/api/data"));
+
+    await act(async () => {
+      await waitFor(() => result.current.loading === false);
     });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.data).toEqual(mockData);
+    expect(result.current.error).toBeNull();
+  });
+
+  it("should handle error state", async () => {
+    const mockError = new Error("API error");
+    fetchMock.mockReject(mockError);
+
+    const { result } = renderHook(() => useDataFetcher("/api/data"));
+
+    await act(async () => {
+      await waitFor(() => result.current.error !== null);
+    });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.data).toBeNull();
+    expect(result.current.error).toEqual(mockError);
+  });
+
+  it("should not update state if unmounted (cleanup)", async () => {
+    const mockData = { data: "12345" };
+    fetchMock.mockResponseOnce(JSON.stringify(mockData));
+
+    const { result, unmount } = renderHook(() => useDataFetcher("/api/data"));
+
+    unmount();
+
+    await act(async () => {
+      await waitFor(
+        () => result.current.data !== null || result.current.error !== null,
+        { timeout: 1000 },
+      ).catch(() => {});
+    });
+
+    expect(result.current.data).toBeNull();
+    expect(result.current.loading).toBe(true);
+    expect(result.current.error).toBeNull();
   });
 });
