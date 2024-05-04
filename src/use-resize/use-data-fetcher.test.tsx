@@ -19,30 +19,29 @@ describe("useDataFetcher", () => {
     const mockData = { data: "12345" };
     fetchMock.mockResponseOnce(JSON.stringify(mockData));
 
-    const { result } = renderHook(() => useDataFetcher("/api/data"));
-
     await act(async () => {
+      const { result } = renderHook(() => useDataFetcher("/api/data"));
       await waitFor(() => result.current.loading === false);
-    });
 
-    expect(result.current.loading).toBe(false);
-    expect(result.current.data).toEqual(mockData);
-    expect(result.current.error).toBeNull();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual(mockData);
+      expect(result.current.error).toBeNull();
+    });
   });
 
   it("should handle error state", async () => {
     const mockError = new Error("API error");
     fetchMock.mockReject(mockError);
 
-    const { result } = renderHook(() => useDataFetcher("/api/data"));
-
     await act(async () => {
       await waitFor(() => result.current.error !== null);
-    });
 
-    expect(result.current.loading).toBe(false);
-    expect(result.current.data).toBeNull();
-    expect(result.current.error).toEqual(mockError);
+      const { result } = renderHook(() => useDataFetcher("/api/data"));
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBeNull();
+      expect(result.current.error).toEqual(mockError);
+    });
   });
 
   it("should not update state if unmounted (cleanup)", async () => {

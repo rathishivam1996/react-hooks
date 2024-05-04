@@ -4,6 +4,7 @@ module.exports = {
     "<rootDir>/node_modules/@testing-library/jest-dom",
   ],
   testEnvironment: "jsdom",
+  preset: "ts-jest",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
