@@ -218,17 +218,6 @@ function updateHeight(
   minSize?: Size,
   maxSize?: Size,
 ): Size {
-  console.log(
-    size,
-    "size",
-    deltaY,
-    "deltaY",
-    minSize,
-    "minSize",
-    maxSize,
-    "maxSize",
-  );
-
   let newHeight = size.h;
   if (handleDirection === "bottom") {
     newHeight = Math.min(
@@ -242,9 +231,6 @@ function updateHeight(
     );
   }
 
-  console.log(newHeight, "newHeight");
-
-  console.log({ ...size, h: newHeight });
   return { ...size, h: newHeight };
 }
 

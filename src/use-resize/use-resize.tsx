@@ -42,9 +42,11 @@ export type UseResizeProps<Target extends Element = Element> = {
   lockAspectRatio?: boolean;
 };
 
+type EventRemoveCallback = () => void;
+type EventListenersMap = Map<Direction, Array<EventRemoveCallback>>;
+
 function useResize<Target extends Element = Element>({
   disabled = false,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   detect = ResizableEventType.Pointer,
   onResizeStart,
   onResize,
@@ -92,6 +94,7 @@ function useResize<Target extends Element = Element>({
       const startPos = getCurrentPosition(event);
 
       if (!rect) {
+        // eslint-disable-next-line no-console
         console.warn(
           "Invalid resizableRef: expected an HTMLElement or a RefObject.",
         );
@@ -99,6 +102,7 @@ function useResize<Target extends Element = Element>({
       }
 
       if (!startPos) {
+        // eslint-disable-next-line no-console
         console.warn(
           "Invalid event type: Unable to get initail position from event",
         );
@@ -163,6 +167,7 @@ function useResize<Target extends Element = Element>({
       const newPosition = getCurrentPosition(event);
 
       if (!newPosition) {
+        // eslint-disable-next-line no-console
         console.warn(
           "Invalid event type: Unable to get initial position from event",
         );
@@ -211,6 +216,7 @@ function useResize<Target extends Element = Element>({
       const newPosition = getCurrentPosition(event);
 
       if (!newPosition) {
+        // eslint-disable-next-line no-console
         console.warn(
           "Invalid event type: Unable to get initial position from event",
         );
@@ -256,60 +262,63 @@ function useResize<Target extends Element = Element>({
     ],
   );
 
-  // effect for down listeners
   useEffect(() => {
-    const eventTypes = ["pointerdown", "mousedown", "touchstart"] as const;
-
-    // Do nothing if SSR
     if (typeof window === "undefined") return;
 
-    const eventListenersMap = new Map<Direction, Array<() => void>>();
+    const eventListenersMap: EventListenersMap = new Map();
 
-    Object.keys(state.handleRefs).forEach((key) => {
-      const direction = key as Direction;
-      const ref = state.handleRefs[direction]?.current;
+    const addEventListeners = (eventType: string) => {
+      Object.keys(state.handleRefs).forEach((key) => {
+        const direction = key as Direction;
+        const ref = state.handleRefs[direction]?.current;
 
-      if (ref) {
-        const handleEventDownDirection = (event: Event) => {
-          if (isRecognisableEvent(event)) {
-            handlePointerDown(direction, event);
-          }
-        };
+        if (ref) {
+          const handleEventDownDirection = (event: Event) => {
+            if (isRecognisableEvent(event)) {
+              handlePointerDown(direction, event);
+            }
+          };
 
-        eventTypes.forEach((eventType) => {
-          // Attach down event listeners
           ref.addEventListener(eventType, handleEventDownDirection);
 
-          // Remove down event listeners
-          if (!eventListenersMap.has(direction))
+          if (!eventListenersMap.has(direction)) {
             eventListenersMap.set(direction, []);
+          }
 
-          eventListenersMap
-            .get(direction)
-            ?.push(() =>
-              ref.removeEventListener(eventType, handleEventDownDirection),
-            );
-        });
-      }
-    });
+          eventListenersMap.get(direction)?.push(() => {
+            ref.removeEventListener(eventType, handleEventDownDirection);
+          });
+        }
+      });
+    };
+
+    switch (detect) {
+      case "mouse":
+        addEventListeners("mousedown");
+        break;
+      case "pointer":
+        addEventListeners("pointerdown");
+        break;
+      case "touch":
+        addEventListeners("touchstart");
+        break;
+    }
 
     return () => {
       eventListenersMap.forEach((listeners) => {
         listeners.forEach((clb) => clb());
       });
     };
-  }, [handlePointerDown, state.handleRefs]);
+  }, [handlePointerDown, state.handleRefs, detect]);
 
   // effect for move and up listeners
   useEffect(() => {
     if (state.isResizing && window) {
-      console.log(`added`);
       window.addEventListener("pointermove", handlePointerMove);
       window.addEventListener("pointerup", handlePointerUp);
     }
 
     return () => {
-      console.log(`removed`);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
