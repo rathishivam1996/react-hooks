@@ -7,10 +7,8 @@ import {
   ResizableEventType,
   ResizableRef,
   ResizableResult,
-  ResizeCallback,
-  ResizeEndCallback,
-  ResizeStartCallback,
   Size,
+  UseResizeProps,
 } from "./use-resize.types";
 import {
   calculateDeltas,
@@ -28,18 +26,6 @@ type ResizableState<Target extends Element> = {
   startDirection: Direction | null;
   startPos: Position | null;
   startSize: Size | null;
-};
-
-export type UseResizeProps<Target extends Element = Element> = {
-  disabled?: boolean;
-  detect?: ResizableEventType;
-  onResizeStart?: ResizeStartCallback<Target>;
-  onResize?: ResizeCallback<Target>;
-  onResizeEnd?: ResizeEndCallback<Target>;
-  minSize?: Size;
-  maxSize?: Size;
-  parentRef?: ResizableRef<Target>;
-  lockAspectRatio?: boolean;
 };
 
 type EventRemoveCallback = () => void;
@@ -293,13 +279,13 @@ function useResize<Target extends Element = Element>({
     };
 
     switch (detect) {
-      case "mouse":
+      case ResizableEventType.Mouse:
         addEventListeners("mousedown");
         break;
-      case "pointer":
+      case ResizableEventType.Pointer:
         addEventListeners("pointerdown");
         break;
-      case "touch":
+      case ResizableEventType.Touch:
         addEventListeners("touchstart");
         break;
     }

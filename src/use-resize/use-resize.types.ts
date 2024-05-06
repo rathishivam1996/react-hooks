@@ -8,12 +8,6 @@ import {
   MutableRefObject,
 } from "react";
 
-export enum ResizableEventType {
-  Mouse = "mouse",
-  Touch = "touch",
-  Pointer = "pointer",
-}
-
 export type ResizableDomEvents = MouseEvent | TouchEvent | PointerEvent;
 export type ResizableReactEvents<Target extends Element = Element> =
   | ReactMouseEvent<Target>
@@ -59,6 +53,12 @@ export type HandleRefs<Target extends Element> = {
 export type ResizableRef<Target extends Element> =
   MutableRefObject<Target | null>;
 
+export enum ResizableEventType {
+  Mouse = "mouse",
+  Touch = "touch",
+  Pointer = "pointer",
+}
+
 export type ResizeStartCallback<Target extends Element> = (props: {
   event: ResizableDomEvents;
   resizable: Target;
@@ -80,6 +80,23 @@ export type ResizeCallback<Target extends Element> = (props: {
 }) => void;
 
 export type ResizeEndCallback<Target extends Element> = ResizeCallback<Target>;
+
+export interface UseResizeProps<
+  Target extends Element = Element,
+  EventType extends ResizableEventType = ResizableEventType,
+> {
+  disabled?: boolean;
+  detect?: EventType;
+
+  minSize?: Size;
+  maxSize?: Size;
+  parentRef?: ResizableRef<Target>;
+  lockAspectRatio?: boolean;
+
+  onResizeStart?: ResizeStartCallback<Target>;
+  onResize?: ResizeCallback<Target>;
+  onResizeEnd?: ResizeEndCallback<Target>;
+}
 
 export type ResizableResult<T extends Element> = {
   resizableRef: ResizableRef<T>;
@@ -113,7 +130,7 @@ interface ResizablePointerHandlers<Target extends Element = Element> {
   onPointerLeave?: PointerEventHandler<Target>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 type ResizableHandlers<Target extends Element = Element> =
   | ResizableMouseHandlers<Target>
   | ResizableTouchHandlers<Target>

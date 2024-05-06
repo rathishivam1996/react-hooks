@@ -1,3 +1,4 @@
+// npx eslint --print-config .eslintrc.js
 module.exports = {
   root: true,
   env: {
@@ -17,6 +18,7 @@ module.exports = {
   ],
   extends: [
     "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
@@ -43,7 +45,8 @@ module.exports = {
     "react-hooks/exhaustive-deps": "warn",
     "prettier/prettier": "error",
     "no-console": "error",
-    "no-unused-vars": "error",
+    "no-unused-vars": "off", // turn off ESLint's no-unused-vars rule
+    "@typescript-eslint/no-unused-vars": "error", // turn on TypeScript's no-unused-vars rule
     "react/display-name": "error",
     "react/jsx-no-undef": "error",
     "react/jsx-key": "error",
