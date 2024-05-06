@@ -67,6 +67,10 @@ export function isRecognisableEvent(event: Event): event is ResizableDomEvents {
   return isMouseEvent(event) || isTouchEvent(event) || isPointerEvent(event);
 }
 
+export function isSSR(): boolean {
+  return typeof window === "undefined";
+}
+
 export function getCurrentPosition(
   event: MouseEvent | TouchEvent | PointerEvent,
 ): { x: number; y: number } | null {

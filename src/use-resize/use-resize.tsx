@@ -17,7 +17,11 @@ import {
   getMaxBounds,
   getSize,
   isRecognisableEvent,
+  isSSR,
 } from "./use-resize.utils";
+
+type EventRemoveCallback = () => void;
+type EventListenersMap = Map<Direction, Array<EventRemoveCallback>>;
 
 type ResizableState<Target extends Element> = {
   resizableRef: ResizableRef<Target>;
@@ -27,9 +31,6 @@ type ResizableState<Target extends Element> = {
   startPos: Position | null;
   startSize: Size | null;
 };
-
-type EventRemoveCallback = () => void;
-type EventListenersMap = Map<Direction, Array<EventRemoveCallback>>;
 
 function useResize<Target extends Element = Element>({
   disabled = false,
@@ -249,7 +250,7 @@ function useResize<Target extends Element = Element>({
   );
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (isSSR()) return;
 
     const eventListenersMap: EventListenersMap = new Map();
 
@@ -299,16 +300,42 @@ function useResize<Target extends Element = Element>({
 
   // effect for move and up listeners
   useEffect(() => {
-    if (state.isResizing && window) {
-      window.addEventListener("pointermove", handlePointerMove);
-      window.addEventListener("pointerup", handlePointerUp);
+    if (isSSR()) return;
+
+    if (state.isResizing) {
+      switch (detect) {
+        case ResizableEventType.Mouse:
+          window.addEventListener("mousemove", handlePointerMove);
+          window.addEventListener("mouseup", handlePointerUp);
+          break;
+        case ResizableEventType.Touch:
+          window.addEventListener("touchmove", handlePointerMove);
+          window.addEventListener("touchend", handlePointerUp);
+          break;
+        case ResizableEventType.Pointer:
+          window.addEventListener("pointermove", handlePointerMove);
+          window.addEventListener("pointerup", handlePointerUp);
+          break;
+      }
     }
 
     return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
+      switch (detect) {
+        case ResizableEventType.Mouse:
+          window.removeEventListener("mousemove", handlePointerMove);
+          window.removeEventListener("mouseup", handlePointerUp);
+          break;
+        case ResizableEventType.Touch:
+          window.removeEventListener("touchmove", handlePointerMove);
+          window.removeEventListener("touchend", handlePointerUp);
+          break;
+        case ResizableEventType.Pointer:
+          window.removeEventListener("pointermove", handlePointerMove);
+          window.removeEventListener("pointerup", handlePointerUp);
+          break;
+      }
     };
-  }, [handlePointerMove, handlePointerUp, state.isResizing]);
+  }, [handlePointerMove, handlePointerUp, state.isResizing, detect]);
 
   return {
     resizableRef: state.resizableRef,
