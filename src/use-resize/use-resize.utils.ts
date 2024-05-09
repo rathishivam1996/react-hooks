@@ -194,48 +194,65 @@ function adjustForAspectRatio(
 }
 
 function updateWidth(
-  size: Size,
+  currSize: Size,
   handleDirection: Direction,
   deltaX: number,
   minSize?: Size,
   maxSize?: Size,
 ): Size {
-  let newWidth = size.w;
-  if (handleDirection === "right") {
+  let newWidth = currSize.w;
+  if (
+    handleDirection === "right" ||
+    handleDirection === "topright" ||
+    handleDirection === "bottomright"
+  ) {
     newWidth = Math.min(
       maxSize?.w ?? Infinity,
-      Math.max(minSize?.w ?? 0, size.w + deltaX),
+      Math.max(minSize?.w ?? 0, currSize.w + deltaX),
     );
-  } else if (handleDirection === "left") {
+  } else if (
+    handleDirection === "left" ||
+    handleDirection === "topleft" ||
+    handleDirection === "bottomleft"
+  ) {
     newWidth = Math.min(
       maxSize?.w ?? Infinity,
-      Math.max(minSize?.w ?? 0, size.w - deltaX),
+      Math.max(minSize?.w ?? 0, currSize.w - deltaX),
     );
   }
-  return { ...size, w: newWidth };
+
+  return { ...currSize, w: newWidth };
 }
 
 function updateHeight(
-  size: Size,
+  currSize: Size,
   handleDirection: Direction,
   deltaY: number,
   minSize?: Size,
   maxSize?: Size,
 ): Size {
-  let newHeight = size.h;
-  if (handleDirection === "bottom") {
+  let newHeight = currSize.h;
+  if (
+    handleDirection === "bottom" ||
+    handleDirection === "bottomright" ||
+    handleDirection === "bottomleft"
+  ) {
     newHeight = Math.min(
       maxSize?.h ?? Infinity,
-      Math.max(minSize?.h ?? 0, size.h + deltaY),
+      Math.max(minSize?.h ?? 0, currSize.h + deltaY),
     );
-  } else if (handleDirection === "top") {
+  } else if (
+    handleDirection === "top" ||
+    handleDirection === "topright" ||
+    handleDirection === "topleft"
+  ) {
     newHeight = Math.min(
       maxSize?.h ?? Infinity,
-      Math.max(minSize?.h ?? 0, size.h - deltaY),
+      Math.max(minSize?.h ?? 0, currSize.h - deltaY),
     );
   }
 
-  return { ...size, h: newHeight };
+  return { ...currSize, h: newHeight };
 }
 
 type ResizeDirection = "horizontal" | "vertical" | "diagonal";

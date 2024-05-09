@@ -77,18 +77,26 @@ const ResizeTest = ({
     setHeight(currSize.h);
   };
 
-  const [addTopRef, setAddTopRef] = useState(false);
-  const { resizableRef, top, topright, right, bottom, left } =
-    useResize<HTMLDivElement>({
-      disabled: addTopRef,
-      onResizeStart,
-      onResize,
-      onResizeEnd,
-      minSize: { w: 100, h: 100 },
-      maxSize: { w: 500, h: 500 },
-      parentRef: parentRef,
-      lockAspectRatio: false,
-    });
+  const {
+    resizableRef,
+    top,
+    topright,
+    right,
+    bottomright,
+    bottom,
+    bottomleft,
+    left,
+    topleft,
+  } = useResize<HTMLDivElement>({
+    disabled: false,
+    onResizeStart,
+    onResize,
+    onResizeEnd,
+    minSize: { w: 100, h: 100 },
+    maxSize: { w: 500, h: 500 },
+    parentRef: parentRef,
+    lockAspectRatio: false,
+  });
 
   return (
     <div
@@ -96,32 +104,44 @@ const ResizeTest = ({
       style={{ width: `${width}px`, height: `${height}px` }}
       className="resizable-box relative bg-red-300"
     >
-      {addTopRef && (
-        <div
-          ref={top}
-          className="resize-handle n absolute left-0 top-0 h-[10px] w-full cursor-pointer bg-gray-500"
-        ></div>
-      )}
-      <button onClick={() => setAddTopRef(!addTopRef)}>Toggle Top Ref</button>
+      <div
+        ref={top}
+        className="resize-handle t absolute left-0 top-0 h-[10px] w-full cursor-pointer bg-gray-500"
+      ></div>
 
       <div
         ref={topright}
-        className="resize-handle e absolute right-0 top-0 z-10 h-[10px] w-[10px] cursor-pointer bg-orange-500"
+        className="resize-handle tr absolute right-0 top-0 z-10 h-[10px] w-[10px] cursor-pointer bg-orange-500"
       ></div>
 
       <div
         ref={right}
-        className="resize-handle e absolute right-0 top-0 h-full w-[10px] cursor-pointer bg-gray-500"
+        className="resize-handle r absolute right-0 top-0 h-full w-[10px] cursor-pointer bg-gray-500"
+      ></div>
+
+      <div
+        ref={bottomright}
+        className="resize-handle br absolute bottom-0 right-0 z-10 h-[10px] w-[10px] cursor-pointer bg-blue-500"
       ></div>
 
       <div
         ref={bottom}
-        className="resize-handle s absolute bottom-0 left-0 h-[10px] w-full cursor-pointer bg-gray-500"
+        className="resize-handle b absolute bottom-0 left-0 h-[10px] w-full cursor-pointer bg-gray-500"
+      ></div>
+
+      <div
+        ref={bottomleft}
+        className="resize-handle bl absolute bottom-0 left-0 z-10 h-[10px] w-[10px] cursor-pointer bg-red-900"
       ></div>
 
       <div
         ref={left}
-        className="resize-handle w absolute left-0 top-0 h-full w-[10px] cursor-pointer bg-gray-500"
+        className="resize-handle l absolute left-0 top-0 h-full w-[10px] cursor-pointer bg-gray-500"
+      ></div>
+
+      <div
+        ref={topleft}
+        className="resize-handle tl absolute left-0 top-0 z-10 h-[10px] w-[10px] cursor-pointer bg-green-900"
       ></div>
     </div>
   );
