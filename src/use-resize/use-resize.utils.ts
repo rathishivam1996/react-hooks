@@ -108,7 +108,7 @@ export function calculateNewSize(
   lockAspectRatio = false,
 ): Size {
   let newSize: Size = { ...currentSize };
-  const resizeDirection = getResizeDirection(handleDirection);
+  let resizeDirection = getResizeDirection(handleDirection);
 
   if (lockAspectRatio) {
     const adjustedDelta = adjustForAspectRatio(
@@ -121,13 +121,26 @@ export function calculateNewSize(
     deltaX = adjustedDelta.deltaX;
     deltaY = adjustedDelta.deltaY;
 
-    // Determine the handle direction for width
-    newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
+    // Adjust handleDirection for non-diagonal directions
+    switch (handleDirection) {
+      case "top" || "topright":
+        handleDirection = "topright";
+        break;
+      case "right" || "bottomright":
+        handleDirection = "bottomright";
+        break;
+      case "bottom" || "bottomleft":
+        handleDirection = "bottomleft";
+        break;
+      case "left" || "topleft":
+        handleDirection = "topleft";
+        break;
+    }
 
-    // Determine the handle direction for height
-    newSize = updateHeight(newSize, "bottom", deltaY, minSize, maxSize);
+    console.log(handleDirection, "handle-direction");
 
-    return newSize;
+    // Since we've adjusted handleDirection, we need to get the new resizeDirection
+    resizeDirection = getResizeDirection(handleDirection);
   }
 
   switch (resizeDirection) {
@@ -194,65 +207,45 @@ function adjustForAspectRatio(
 }
 
 function updateWidth(
-  currSize: Size,
-  handleDirection: Direction,
+  currentSize: Size,
+  direction: Direction,
   deltaX: number,
   minSize?: Size,
   maxSize?: Size,
 ): Size {
-  let newWidth = currSize.w;
-  if (
-    handleDirection === "right" ||
-    handleDirection === "topright" ||
-    handleDirection === "bottomright"
-  ) {
-    newWidth = Math.min(
-      maxSize?.w ?? Infinity,
-      Math.max(minSize?.w ?? 0, currSize.w + deltaX),
-    );
-  } else if (
-    handleDirection === "left" ||
-    handleDirection === "topleft" ||
-    handleDirection === "bottomleft"
-  ) {
-    newWidth = Math.min(
-      maxSize?.w ?? Infinity,
-      Math.max(minSize?.w ?? 0, currSize.w - deltaX),
-    );
-  }
+  const isLeftDirection =
+    direction === "left" ||
+    direction === "topleft" ||
+    direction === "bottomleft";
 
-  return { ...currSize, w: newWidth };
+  const newWidth = currentSize.w + (isLeftDirection ? -deltaX : deltaX);
+
+  const clampedWidth = Math.min(
+    Math.max(newWidth, minSize?.w ?? 0),
+    maxSize?.w ?? Infinity,
+  );
+
+  return { ...currentSize, w: clampedWidth };
 }
 
 function updateHeight(
-  currSize: Size,
-  handleDirection: Direction,
+  currentSize: Size,
+  direction: Direction,
   deltaY: number,
   minSize?: Size,
   maxSize?: Size,
 ): Size {
-  let newHeight = currSize.h;
-  if (
-    handleDirection === "bottom" ||
-    handleDirection === "bottomright" ||
-    handleDirection === "bottomleft"
-  ) {
-    newHeight = Math.min(
-      maxSize?.h ?? Infinity,
-      Math.max(minSize?.h ?? 0, currSize.h + deltaY),
-    );
-  } else if (
-    handleDirection === "top" ||
-    handleDirection === "topright" ||
-    handleDirection === "topleft"
-  ) {
-    newHeight = Math.min(
-      maxSize?.h ?? Infinity,
-      Math.max(minSize?.h ?? 0, currSize.h - deltaY),
-    );
-  }
+  const isTopDirection =
+    direction === "top" || direction === "topleft" || direction === "topright";
 
-  return { ...currSize, h: newHeight };
+  const newHeight = currentSize.h + (isTopDirection ? -deltaY : deltaY);
+
+  const clampedHeight = Math.min(
+    Math.max(newHeight, minSize?.h ?? 0),
+    maxSize?.h ?? Infinity,
+  );
+
+  return { ...currentSize, h: clampedHeight };
 }
 
 type ResizeDirection = "horizontal" | "vertical" | "diagonal";
