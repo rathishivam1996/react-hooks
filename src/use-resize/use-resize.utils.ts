@@ -111,6 +111,31 @@ export function calculateNewSize(
   let resizeDirection = getResizeDirection(handleDirection);
 
   if (lockAspectRatio) {
+    // Adjust handleDirection for non-diagonal directions
+    switch (handleDirection) {
+      case "top":
+      case "topright":
+        handleDirection = "topright";
+        break;
+      case "right":
+      case "bottomright":
+        handleDirection = "bottomright";
+        break;
+      case "bottom":
+      case "bottomleft":
+        handleDirection = "bottomleft";
+        break;
+      case "left":
+      case "topleft":
+        handleDirection = "topleft";
+        break;
+    }
+
+    console.log(handleDirection, "handle-direction");
+
+    // Since we've adjusted handleDirection, we need to get the new resizeDirection
+    resizeDirection = getResizeDirection(handleDirection);
+
     const adjustedDelta = adjustForAspectRatio(
       resizeDirection,
       currentSize,
@@ -121,26 +146,7 @@ export function calculateNewSize(
     deltaX = adjustedDelta.deltaX;
     deltaY = adjustedDelta.deltaY;
 
-    // Adjust handleDirection for non-diagonal directions
-    switch (handleDirection) {
-      case "top" || "topright":
-        handleDirection = "topright";
-        break;
-      case "right" || "bottomright":
-        handleDirection = "bottomright";
-        break;
-      case "bottom" || "bottomleft":
-        handleDirection = "bottomleft";
-        break;
-      case "left" || "topleft":
-        handleDirection = "topleft";
-        break;
-    }
-
-    console.log(handleDirection, "handle-direction");
-
-    // Since we've adjusted handleDirection, we need to get the new resizeDirection
-    resizeDirection = getResizeDirection(handleDirection);
+    console.log(deltaX, deltaY, "adjusted-deltas");
   }
 
   switch (resizeDirection) {
@@ -157,6 +163,7 @@ export function calculateNewSize(
       );
       break;
     case "diagonal":
+      console.log(deltaX, deltaY, "diagonal-deltas");
       newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
       newSize = updateHeight(
         newSize,
