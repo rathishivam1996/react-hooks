@@ -110,30 +110,9 @@ export function calculateNewSize(
   let newSize: Size = { ...currentSize };
   let resizeDirection = getResizeDirection(handleDirection);
 
+  console.log(`original-deltax : ${deltaX}, original-delta-y: ${deltaY}`);
+
   if (lockAspectRatio) {
-    // Adjust handleDirection for non-diagonal directions
-    // switch (handleDirection) {
-    //   case "top":
-    //   case "topright":
-    //     handleDirection = "topright";
-    //     break;
-    //   case "right":
-    //   case "bottomright":
-    //     handleDirection = "bottomright";
-    //     break;
-    //   case "bottom":
-    //   case "bottomleft":
-    //     handleDirection = "bottomleft";
-    //     break;
-    //   case "left":
-    //   case "topleft":
-    //     handleDirection = "topleft";
-    //     break;
-    // }
-
-    // Since we've adjusted handleDirection, we need to get the new resizeDirection
-    // resizeDirection = getResizeDirection(handleDirection);
-
     const adjustedDelta = adjustForAspectRatio(
       resizeDirection,
       currentSize,
@@ -149,7 +128,7 @@ export function calculateNewSize(
     case "horizontal":
       newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
       if (lockAspectRatio) {
-        newSize = updateHeight(newSize, "bottom", deltaY, minSize, maxSize);
+        // update height with proper sign
       }
       break;
     case "vertical":
@@ -161,7 +140,7 @@ export function calculateNewSize(
         maxSize,
       );
       if (lockAspectRatio) {
-        newSize = updateWidth(newSize, "right", deltaX, minSize, maxSize);
+        // update width with proper sign
       }
       break;
     case "diagonal":
