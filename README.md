@@ -54,31 +54,6 @@ The `useResize` hook accepts the following props to customize the resizing behav
   - Type: `boolean`
   - Description: Specifies whether to lock the aspect ratio of the resizable component during resizing.
 
-### Types:
-
-- `ResizeStartCallback<Target>`:
-  - Type: `(props: ResizeStartProps<Target>) => void`
-  - Description: Callback function called when resizing starts.
-
-- `ResizeCallback<Target>`:
-  - Type: `(props: ResizeProps<Target>) => void`
-  - Description: Callback function called during resizing.
-
-- `ResizeEndCallback<Target>`:
-  - Type: `ResizeCallback<Target>`
-  - Description: Callback function called when resizing ends.
-
-- `ResizableRef<Target>`:
-  - Type: `MutableRefObject<Target | null>`
-  - Description: A mutable ref object pointing to the resizable component.
-
-- `Size`:
-  - Type: `{ w: number; h: number; }`
-  - Description: Object specifying the width and height of a component.
-
-- `ResizableEventType`:
-  - Type: `enum { Mouse = "mouse", Touch = "touch", Pointer = "pointer" }`
-  - Description: Enum specifying the type of resize events to detect.
 
 
 
