@@ -108,51 +108,39 @@ export function calculateNewSize(
   lockAspectRatio = false,
 ): Size {
   let newSize: Size = { ...currentSize };
-  let resizeDirection = getResizeDirection(handleDirection);
 
-  if (lockAspectRatio) {
-    // Adjust handleDirection for non-diagonal directions
-    // switch (handleDirection) {
-    //   case "top":
-    //   case "topright":
-    //     handleDirection = "topright";
-    //     break;
-    //   case "right":
-    //   case "bottomright":
-    //     handleDirection = "bottomright";
-    //     break;
-    //   case "bottom":
-    //   case "bottomleft":
-    //     handleDirection = "bottomleft";
-    //     break;
-    //   case "left":
-    //   case "topleft":
-    //     handleDirection = "topleft";
-    //     break;
-    // }
-
-    // Since we've adjusted handleDirection, we need to get the new resizeDirection
-    // resizeDirection = getResizeDirection(handleDirection);
-
-    const adjustedDelta = adjustForAspectRatio(
-      resizeDirection,
-      currentSize,
-      deltaX,
-      deltaY,
-    );
-
-    deltaX = adjustedDelta.deltaX;
-    deltaY = adjustedDelta.deltaY;
-  }
-
-  switch (resizeDirection) {
-    case "horizontal":
+  switch (handleDirection) {
+    case "right":
       newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
       if (lockAspectRatio) {
-        newSize = updateHeight(newSize, "bottom", deltaY, minSize, maxSize);
+        newSize = updateHeight(
+          newSize,
+          handleDirection,
+          deltaX / (currentSize.w / currentSize.h),
+          minSize,
+          maxSize,
+        );
       }
       break;
-    case "vertical":
+    case "left":
+      newSize = updateWidth(
+        newSize,
+        handleDirection,
+        -deltaX,
+        minSize,
+        maxSize,
+      );
+      if (lockAspectRatio) {
+        newSize = updateHeight(
+          newSize,
+          handleDirection,
+          -deltaX / (currentSize.w / currentSize.h),
+          minSize,
+          maxSize,
+        );
+      }
+      break;
+    case "bottom":
       newSize = updateHeight(
         newSize,
         handleDirection,
@@ -161,10 +149,37 @@ export function calculateNewSize(
         maxSize,
       );
       if (lockAspectRatio) {
-        newSize = updateWidth(newSize, "right", deltaX, minSize, maxSize);
+        newSize = updateWidth(
+          newSize,
+          handleDirection,
+          deltaY * (currentSize.w / currentSize.h),
+          minSize,
+          maxSize,
+        );
       }
       break;
-    case "diagonal":
+    case "top":
+      newSize = updateHeight(
+        newSize,
+        handleDirection,
+        -deltaY,
+        minSize,
+        maxSize,
+      );
+      if (lockAspectRatio) {
+        newSize = updateWidth(
+          newSize,
+          handleDirection,
+          -deltaY * (currentSize.w / currentSize.h),
+          minSize,
+          maxSize,
+        );
+      }
+      break;
+    case "topright":
+    case "topleft":
+    case "bottomright":
+    case "bottomleft":
       newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
       newSize = updateHeight(
         newSize,
