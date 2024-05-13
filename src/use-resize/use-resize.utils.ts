@@ -123,13 +123,7 @@ export function calculateNewSize(
       }
       break;
     case "left":
-      newSize = updateWidth(
-        newSize,
-        handleDirection,
-        -deltaX,
-        minSize,
-        maxSize,
-      );
+      newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
       if (lockAspectRatio) {
         newSize = updateHeight(
           newSize,
@@ -162,7 +156,7 @@ export function calculateNewSize(
       newSize = updateHeight(
         newSize,
         handleDirection,
-        -deltaY,
+        deltaY,
         minSize,
         maxSize,
       );
