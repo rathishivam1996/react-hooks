@@ -95,7 +95,7 @@ const ResizeTest = ({
     minSize: { w: 100, h: 100 },
     maxSize: { w: 500, h: 500 },
     parentRef: parentRef,
-    lockAspectRatio: false,
+    lockAspectRatio: true,
   });
 
   return (
