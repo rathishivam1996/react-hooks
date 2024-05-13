@@ -112,29 +112,27 @@ export function calculateNewSize(
 
   if (lockAspectRatio) {
     // Adjust handleDirection for non-diagonal directions
-    switch (handleDirection) {
-      case "top":
-      case "topright":
-        handleDirection = "topright";
-        break;
-      case "right":
-      case "bottomright":
-        handleDirection = "bottomright";
-        break;
-      case "bottom":
-      case "bottomleft":
-        handleDirection = "bottomleft";
-        break;
-      case "left":
-      case "topleft":
-        handleDirection = "topleft";
-        break;
-    }
-
-    console.log(handleDirection, "handle-direction");
+    // switch (handleDirection) {
+    //   case "top":
+    //   case "topright":
+    //     handleDirection = "topright";
+    //     break;
+    //   case "right":
+    //   case "bottomright":
+    //     handleDirection = "bottomright";
+    //     break;
+    //   case "bottom":
+    //   case "bottomleft":
+    //     handleDirection = "bottomleft";
+    //     break;
+    //   case "left":
+    //   case "topleft":
+    //     handleDirection = "topleft";
+    //     break;
+    // }
 
     // Since we've adjusted handleDirection, we need to get the new resizeDirection
-    resizeDirection = getResizeDirection(handleDirection);
+    // resizeDirection = getResizeDirection(handleDirection);
 
     const adjustedDelta = adjustForAspectRatio(
       resizeDirection,
@@ -145,13 +143,14 @@ export function calculateNewSize(
 
     deltaX = adjustedDelta.deltaX;
     deltaY = adjustedDelta.deltaY;
-
-    console.log(deltaX, deltaY, "adjusted-deltas");
   }
 
   switch (resizeDirection) {
     case "horizontal":
       newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
+      if (lockAspectRatio) {
+        newSize = updateHeight(newSize, "bottom", deltaY, minSize, maxSize);
+      }
       break;
     case "vertical":
       newSize = updateHeight(
@@ -161,9 +160,11 @@ export function calculateNewSize(
         minSize,
         maxSize,
       );
+      if (lockAspectRatio) {
+        newSize = updateWidth(newSize, "right", deltaX, minSize, maxSize);
+      }
       break;
     case "diagonal":
-      console.log(deltaX, deltaY, "diagonal-deltas");
       newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
       newSize = updateHeight(
         newSize,
