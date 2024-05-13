@@ -68,4 +68,13 @@ The `useResize` hook accepts the following props to customize the resizing behav
   - Type: `boolean`
   - Description: Specifies whether to lock the aspect ratio of the resizable component during resizing.
 
+ ## Return Type of `useResize`
+ 
+The `useResize` hook returns an object with the following properties:
+
+- `resizableRef`: A mutable ref object that references the resizable element.
+- `handleRefs`: An object containing mutable ref objects for each resize handle direction (`top`, `topright`, `right`, `bottomright`, `bottom`, `bottomleft`, `left`, `topleft`).
+- `isResizing`: A boolean indicating whether the component is currently being resized.
+
+
 
