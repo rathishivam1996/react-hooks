@@ -16,7 +16,7 @@ const ResizeTest = ({
   parentRef: MutableRefObject<HTMLDivElement | null>;
 }) => {
   const [width, setWidth] = useState(200);
-  const [height, setHeight] = useState(200);
+  const [height, setHeight] = useState(100);
 
   const onResizeStart: ResizeStartCallback<HTMLDivElement> = ({
     event,

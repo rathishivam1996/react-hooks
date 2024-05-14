@@ -98,6 +98,15 @@ export function calculateDeltas(prevPos: Position, newPos: Position): Delta {
   };
 }
 
+const hasDirection = (
+  dir: "top" | "right" | "bottom" | "left",
+  target: string,
+): boolean => target.includes(dir);
+
+function clamp(value: number, minValue?: number, maxValue?: number): number {
+  return Math.min(Math.max(value, minValue ?? 0), maxValue ?? Infinity);
+}
+
 export function calculateNewSize(
   currentSize: Size,
   handleDirection: Direction,
@@ -109,165 +118,60 @@ export function calculateNewSize(
 ): Size {
   const newSize: Size = { ...currentSize };
   const ratio = currentSize.w / currentSize.h;
-  console.log(`original deltaX: ${deltaX}, original deltaY ${deltaY}`);
 
-  switch (handleDirection) {
-    case "right": {
-      const newWidth = currentSize.w + deltaX;
+  if (hasDirection("right", handleDirection)) {
+    const newWidth = currentSize.w + deltaX;
 
-      const clampedWidth = clamp(newWidth, minSize?.w, maxSize?.w);
+    const clampedWidth = clamp(newWidth, minSize?.w, maxSize?.w);
 
-      newSize.w = clampedWidth;
+    newSize.w = clampedWidth;
 
-      if (lockAspectRatio) {
-        const adjustedDeltaY = deltaX / ratio;
+    if (lockAspectRatio) {
+      const newHeight = newWidth / ratio;
+      const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
 
-        const newHeight = currentSize.h + adjustedDeltaY;
-
-        const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
-
-        newSize.h = clampedHeight;
-      }
-      break;
+      newSize.h = clampedHeight;
     }
+  }
 
-    case "left": {
-      const newWidth = currentSize.w - deltaX;
-      const clampedWidth = clamp(newWidth, minSize?.w, maxSize?.w);
-      newSize.w = clampedWidth;
+  if (hasDirection("left", handleDirection)) {
+    const newWidth = currentSize.w - deltaX;
+    const clampedWidth = clamp(newWidth, minSize?.w, maxSize?.w);
+    newSize.w = clampedWidth;
 
-      if (lockAspectRatio) {
-        const adjustedDeltaY = deltaX / ratio;
-        const newHeight = currentSize.h - adjustedDeltaY;
-        const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
-        newSize.h = clampedHeight;
-      }
-      break;
-    }
-
-    case "bottom": {
-      const newHeight = currentSize.h + deltaY;
+    if (lockAspectRatio) {
+      const newHeight = newWidth / ratio;
       const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
       newSize.h = clampedHeight;
-      if (lockAspectRatio) {
-        const adjustedDeltaX = deltaY * ratio;
-        const newWidth = currentSize.w + adjustedDeltaX;
-        const clampedWidth = clamp(newWidth, minSize?.w, maxSize?.w);
-        newSize.w = clampedWidth;
-      }
-      break;
     }
-    case "top": {
-      const newHeight = currentSize.h - deltaY;
-      const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
-      newSize.h = clampedHeight;
-      if (lockAspectRatio) {
-        const adjustedDeltaX = deltaY * ratio;
-        const newWidth = currentSize.w - adjustedDeltaX;
-        const clampedWidth = clamp(newWidth, minSize?.w, maxSize?.w);
-        newSize.w = clampedWidth;
-      }
-      break;
-    }
-    case "topleft": {
-      let adjustedDeltaX = deltaX;
-      let adjustedDeltaY = deltaY;
+  }
 
-      if (lockAspectRatio) {
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          adjustedDeltaY = deltaX / ratio;
-        } else {
-          adjustedDeltaX = deltaY * ratio;
-        }
-      }
-
-      const newWidth = currentSize.w - adjustedDeltaX;
+  if (hasDirection("bottom", handleDirection)) {
+    const newHeight = currentSize.h + deltaY;
+    const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
+    newSize.h = clampedHeight;
+    if (lockAspectRatio) {
+      const newWidth = newHeight * ratio;
       const clampedWidth = clamp(newWidth, minSize?.w, maxSize?.w);
       newSize.w = clampedWidth;
-
-      const newHeight = currentSize.h - adjustedDeltaY;
-      const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
-      newSize.h = clampedHeight;
-      break;
     }
-    case "topright": {
-      let adjustedDeltaX = deltaX;
-      let adjustedDeltaY = deltaY;
+  }
 
-      if (lockAspectRatio) {
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          adjustedDeltaY = deltaX / ratio;
-        } else {
-          adjustedDeltaX = deltaY * ratio;
-        }
-      }
-
-      const newWidth = currentSize.w + adjustedDeltaX;
+  if (hasDirection("top", handleDirection)) {
+    const newHeight = currentSize.h - deltaY;
+    const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
+    newSize.h = clampedHeight;
+    if (lockAspectRatio) {
+      const newWidth = newHeight * ratio;
       const clampedWidth = clamp(newWidth, minSize?.w, maxSize?.w);
       newSize.w = clampedWidth;
-
-      const newHeight = currentSize.h - adjustedDeltaY;
-      const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
-      newSize.h = clampedHeight;
-      break;
     }
-    case "bottomleft": {
-      let adjustedDeltaX = deltaX;
-      let adjustedDeltaY = deltaY;
-
-      if (lockAspectRatio) {
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          adjustedDeltaY = deltaX / ratio;
-        } else {
-          adjustedDeltaX = deltaY * ratio;
-        }
-      }
-
-      console.log(
-        `adjusted deltaX: ${adjustedDeltaX}, adjusted deltaY ${adjustedDeltaY}`,
-      );
-
-      const newWidth = currentSize.w - adjustedDeltaX;
-      const clampedWidth = clamp(newWidth, minSize?.w, maxSize?.w);
-      newSize.w = clampedWidth;
-
-      const newHeight = currentSize.h - adjustedDeltaY;
-      const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
-      newSize.h = clampedHeight;
-      break;
-    }
-    case "bottomright": {
-      let adjustedDeltaX = deltaX;
-      let adjustedDeltaY = deltaY;
-
-      if (lockAspectRatio) {
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          adjustedDeltaY = deltaX / ratio;
-        } else {
-          adjustedDeltaX = deltaY * ratio;
-        }
-      }
-
-      const newWidth = currentSize.w + adjustedDeltaX;
-      const clampedWidth = clamp(newWidth, minSize?.w, maxSize?.w);
-      newSize.w = clampedWidth;
-
-      const newHeight = currentSize.h + adjustedDeltaY;
-      const clampedHeight = clamp(newHeight, minSize?.h, maxSize?.h);
-      newSize.h = clampedHeight;
-      break;
-    }
-    default:
-      break;
   }
 
   return newSize;
 }
 
-function clamp(value: number, minValue?: number, maxValue?: number): number {
-  return Math.min(Math.max(value, minValue ?? 0), maxValue ?? Infinity);
-}
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function adjustForAspectRatio(
   direction: Direction,
   currentSize: Size,
@@ -306,6 +210,7 @@ function adjustForAspectRatio(
   return { deltaX: Math.abs(newDeltaX), deltaY: Math.abs(newDeltaY) };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function updateWidth(
   currentSize: Size,
   direction: Direction,
@@ -328,6 +233,7 @@ function updateWidth(
   return { ...currentSize, w: clampedWidth };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function updateHeight(
   currentSize: Size,
   direction: Direction,
@@ -350,6 +256,7 @@ function updateHeight(
 
 type ResizeDirection = "horizontal" | "vertical" | "diagonal";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getResizeDirection(handleDirection: Direction): ResizeDirection {
   if (["top", "bottom"].includes(handleDirection)) {
     return "vertical";
