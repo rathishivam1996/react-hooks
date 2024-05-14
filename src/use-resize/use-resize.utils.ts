@@ -108,30 +108,33 @@ export function calculateNewSize(
   lockAspectRatio = false,
 ): Size {
   let newSize: Size = { ...currentSize };
-  let resizeDirection = getResizeDirection(handleDirection);
 
-  console.log(`original-deltax : ${deltaX}, original-delta-y: ${deltaY}`);
-
-  if (lockAspectRatio) {
-    const adjustedDelta = adjustForAspectRatio(
-      resizeDirection,
-      currentSize,
-      deltaX,
-      deltaY,
-    );
-
-    deltaX = adjustedDelta.deltaX;
-    deltaY = adjustedDelta.deltaY;
-  }
-
-  switch (resizeDirection) {
-    case "horizontal":
+  switch (handleDirection) {
+    case "right":
       newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
       if (lockAspectRatio) {
-        // update height with proper sign
+        newSize = updateHeight(
+          newSize,
+          handleDirection,
+          deltaX / (currentSize.w / currentSize.h),
+          minSize,
+          maxSize,
+        );
       }
       break;
-    case "vertical":
+    case "left":
+      newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
+      if (lockAspectRatio) {
+        newSize = updateHeight(
+          newSize,
+          handleDirection,
+          -deltaX / (currentSize.w / currentSize.h),
+          minSize,
+          maxSize,
+        );
+      }
+      break;
+    case "bottom":
       newSize = updateHeight(
         newSize,
         handleDirection,
@@ -140,10 +143,37 @@ export function calculateNewSize(
         maxSize,
       );
       if (lockAspectRatio) {
-        // update width with proper sign
+        newSize = updateWidth(
+          newSize,
+          handleDirection,
+          deltaY * (currentSize.w / currentSize.h),
+          minSize,
+          maxSize,
+        );
       }
       break;
-    case "diagonal":
+    case "top":
+      newSize = updateHeight(
+        newSize,
+        handleDirection,
+        deltaY,
+        minSize,
+        maxSize,
+      );
+      if (lockAspectRatio) {
+        newSize = updateWidth(
+          newSize,
+          handleDirection,
+          -deltaY * (currentSize.w / currentSize.h),
+          minSize,
+          maxSize,
+        );
+      }
+      break;
+    case "topright":
+    case "topleft":
+    case "bottomright":
+    case "bottomleft":
       newSize = updateWidth(newSize, handleDirection, deltaX, minSize, maxSize);
       newSize = updateHeight(
         newSize,
